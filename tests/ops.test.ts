@@ -103,6 +103,43 @@ describe("downstream circuit breaker safety", () => {
   });
 });
 
+describe("bounded DLQ redrive safety", () => {
+  const controls = demoSnapshot.redriveControls;
+
+  it("starts recovery with a bounded canary instead of a bulk replay", () => {
+    expect(controls.length).toBeGreaterThan(0);
+
+    for (const control of controls) {
+      expect(control.canaryBatchSize).toBeGreaterThan(0);
+      expect(control.canaryBatchSize).toBeLessThanOrEqual(control.eligibleMessageCount);
+      expect(control.maxMessagesPerMinute).toBeGreaterThanOrEqual(control.canaryBatchSize);
+      expect(control.releasedMessageCount).toBeLessThanOrEqual(control.canaryBatchSize);
+      expect(control.remainingMessageCount).toBe(control.eligibleMessageCount - control.releasedMessageCount);
+      expect(control.operatorAction).toMatch(/canary|monitor|ramp|pause/i);
+    }
+  });
+
+  it("waits for provider recovery windows before admitting the canary", () => {
+    for (const control of controls) {
+      const affectedEvents = demoWebhookRecovery.filter(event => event.connectorId === control.connectorId && event.rateLimitRecovery);
+      const latestProviderWindow = Math.max(...affectedEvents.map(event => Date.parse(event.rateLimitRecovery!.retryNotBefore)));
+
+      expect(affectedEvents.length).toBeGreaterThan(0);
+      expect(demoConnectors.some(connector => connector.id === control.connectorId)).toBe(true);
+      expect(Date.parse(control.nextBatchNotBefore)).toBeGreaterThanOrEqual(latestProviderWindow);
+    }
+  });
+
+  it("surfaces canary size, maximum velocity, and remaining volume", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Bounded DLQ redrive");
+    expect(pageSource).toContain("control.canaryBatchSize");
+    expect(pageSource).toContain("control.maxMessagesPerMinute");
+    expect(pageSource).toContain("control.remainingMessageCount");
+  });
+});
+
 describe("webhook recovery safeguards", () => {
   it("ties dead-lettered payloads to workflow and trace context", () => {
     const workflowIds = new Set(demoWorkflows.map(w => w.id));

@@ -1,4 +1,4 @@
-import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, ExecutionConcurrencySummary, OpsSnapshot, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
+import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, DlqRedriveControl, ExecutionConcurrencySummary, OpsSnapshot, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
 
 export const demoMembers: WorkspaceMember[] = [
   { id: "m_1", name: "Jordan Park", role: "admin", initials: "JP" },
@@ -240,6 +240,21 @@ export const demoCircuitBreakers: ConnectorCircuitBreaker[] = [
   }
 ];
 
+export const demoRedriveControls: DlqRedriveControl[] = [
+  {
+    id: "redrive_slack_429",
+    connectorId: "conn_slack",
+    status: "canary",
+    eligibleMessageCount: 12,
+    canaryBatchSize: 2,
+    releasedMessageCount: 0,
+    remainingMessageCount: 12,
+    maxMessagesPerMinute: 10,
+    nextBatchNotBefore: "2026-06-08T15:33:10Z",
+    operatorAction: "Release a two-message canary after the Slack recovery window, monitor errors for five minutes, then ramp to 10 per minute; pause on any new 429."
+  }
+];
+
 export const demoCostSummary: CostSummary = {
   totalRuns: 42, totalCost: 3.47, budgetLimit: 20.00,
   costByWorkflow: [
@@ -260,5 +275,6 @@ export const demoSnapshot: OpsSnapshot = {
   webhookRecovery: demoWebhookRecovery,
   concurrency: demoConcurrencySummary,
   circuitBreakers: demoCircuitBreakers,
+  redriveControls: demoRedriveControls,
   costSummary: demoCostSummary
 };

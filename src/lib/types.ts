@@ -8,6 +8,7 @@ export type RecoveryStatus = "ready_for_replay" | "replayed" | "quarantined";
 export type ConcurrencyStatus = "normal" | "at_capacity" | "backlogged";
 export type ConcurrencyScope = "production_webhook_and_trigger_runs";
 export type CircuitBreakerState = "closed" | "open" | "half_open";
+export type RedriveControlStatus = "held" | "canary" | "ramping" | "paused";
 export type StepType = "trigger" | "transform" | "ai_analyze" | "ai_generate" | "outbound_email" | "outbound_slack" | "crm_upsert" | "sheets_append" | "approval_gate";
 
 export interface WorkspaceMember {
@@ -91,6 +92,13 @@ export interface ConnectorCircuitBreaker {
   probeAfter: string | null; blockedExecutionCount: number; operatorAction: string;
 }
 
+export interface DlqRedriveControl {
+  id: string; connectorId: string; status: RedriveControlStatus;
+  eligibleMessageCount: number; canaryBatchSize: number; releasedMessageCount: number;
+  remainingMessageCount: number; maxMessagesPerMinute: number;
+  nextBatchNotBefore: string; operatorAction: string;
+}
+
 export interface CostSummary {
   totalRuns: number; totalCost: number; budgetLimit: number;
   costByWorkflow: { name: string; cost: number; runs: number }[];
@@ -107,5 +115,6 @@ export interface OpsSnapshot {
   webhookRecovery: WebhookRecoveryEvent[];
   concurrency: ExecutionConcurrencySummary;
   circuitBreakers: ConnectorCircuitBreaker[];
+  redriveControls: DlqRedriveControl[];
   costSummary: CostSummary;
 }

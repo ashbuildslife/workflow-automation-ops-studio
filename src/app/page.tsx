@@ -1,6 +1,6 @@
 import {
   demoActiveRun, demoApprovals, demoAuditLog, demoCircuitBreakers, demoConcurrencySummary, demoConnectors, demoCostSummary,
-  demoMembers, demoWebhookRecovery, demoWorkflows
+  demoMembers, demoRedriveControls, demoWebhookRecovery, demoWorkflows
 } from "@/lib/demo-data";
 import type { ConnectorStatus, CredentialStatus, RunStatus } from "@/lib/types";
 
@@ -171,6 +171,22 @@ export default function Home() {
             <p className="mt-1 text-xs leading-5 text-slate-600">
               Dead-lettered payloads keep trace IDs, idempotency keys, and signature evidence so forged or stale deliveries cannot be replayed.
             </p>
+            <div className="mt-3 rounded-xl border border-indigo-200 bg-white p-3" role="status" aria-label="Bounded dead-letter queue redrive controls">
+              <h4 className="text-xs font-bold text-slate-950">Bounded DLQ redrive</h4>
+              {demoRedriveControls.map(control => {
+                const connector = demoConnectors.find(item => item.id === control.connectorId);
+                return (
+                  <div key={control.id} className="mt-2 text-xs text-slate-600">
+                    <p className="font-semibold text-indigo-700">{connector?.name ?? control.connectorId} · {control.status}</p>
+                    <p className="mt-1">
+                      {control.canaryBatchSize}-message canary · {control.maxMessagesPerMinute}/min max · {control.remainingMessageCount} remaining
+                    </p>
+                    <p className="mt-1 text-slate-400">Next batch no earlier than {formatIsoMinute(control.nextBatchNotBefore)}</p>
+                    <p className="mt-1 leading-5">{control.operatorAction}</p>
+                  </div>
+                );
+              })}
+            </div>
             <div className="mt-3 space-y-2">
               {demoWebhookRecovery.map(event => (
                 <div key={event.id} className="rounded-xl bg-white p-3 text-xs text-slate-600">
