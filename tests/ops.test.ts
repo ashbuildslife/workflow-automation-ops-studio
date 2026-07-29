@@ -140,6 +140,44 @@ describe("bounded DLQ redrive safety", () => {
   });
 });
 
+describe("DLQ canary partial batch isolation", () => {
+  const controls = demoSnapshot.redriveControls;
+
+  it("acknowledges successful canary messages and isolates only failed items", () => {
+    expect(controls.length).toBeGreaterThan(0);
+
+    for (const control of controls) {
+      const observation = control.canaryObservation;
+
+      expect(observation.observedMessageCount).toBe(control.releasedMessageCount);
+      expect(observation.succeededMessageCount + observation.failedMessageCount).toBe(observation.observedMessageCount);
+      expect(observation.acknowledgedMessageCount).toBe(observation.succeededMessageCount);
+      expect(observation.retryEligibleMessageCount).toBe(observation.failedMessageCount);
+      expect(observation.evidence).toMatch(/partial batch|failed item|acknowledged/i);
+    }
+  });
+
+  it("pauses redrive when a canary contains a poison message", () => {
+    const failedCanaries = controls.filter(control => control.canaryObservation.failedMessageCount > 0);
+
+    expect(failedCanaries.length).toBeGreaterThan(0);
+    for (const control of failedCanaries) {
+      expect(control.status).toBe("paused");
+      expect(control.canaryObservation.status).toBe("paused_on_failure");
+      expect(control.operatorAction).toMatch(/isolate|inspect|resume|pause/i);
+    }
+  });
+
+  it("surfaces partial-batch outcomes instead of replaying the whole canary", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Partial-batch canary");
+    expect(pageSource).toContain("observation.acknowledgedMessageCount");
+    expect(pageSource).toContain("observation.retryEligibleMessageCount");
+    expect(pageSource).toContain("observation.evidence");
+  });
+});
+
 describe("webhook recovery safeguards", () => {
   it("ties dead-lettered payloads to workflow and trace context", () => {
     const workflowIds = new Set(demoWorkflows.map(w => w.id));

@@ -244,14 +244,24 @@ export const demoRedriveControls: DlqRedriveControl[] = [
   {
     id: "redrive_slack_429",
     connectorId: "conn_slack",
-    status: "canary",
+    status: "paused",
     eligibleMessageCount: 12,
     canaryBatchSize: 2,
-    releasedMessageCount: 0,
-    remainingMessageCount: 12,
+    releasedMessageCount: 2,
+    remainingMessageCount: 10,
     maxMessagesPerMinute: 10,
     nextBatchNotBefore: "2026-06-08T15:33:10Z",
-    operatorAction: "Release a two-message canary after the Slack recovery window, monitor errors for five minutes, then ramp to 10 per minute; pause on any new 429."
+    operatorAction: "Pause redrive, isolate and inspect the failed item, and resume with another canary only after its payload issue is corrected.",
+    canaryObservation: {
+      status: "paused_on_failure",
+      observedAt: "2026-06-08T15:35:10Z",
+      observedMessageCount: 2,
+      succeededMessageCount: 1,
+      failedMessageCount: 1,
+      acknowledgedMessageCount: 1,
+      retryEligibleMessageCount: 1,
+      evidence: "Partial batch response acknowledged the successful Slack alert and isolated only the failed item after schema validation failed."
+    }
   }
 ];
 

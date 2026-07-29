@@ -175,6 +175,7 @@ export default function Home() {
               <h4 className="text-xs font-bold text-slate-950">Bounded DLQ redrive</h4>
               {demoRedriveControls.map(control => {
                 const connector = demoConnectors.find(item => item.id === control.connectorId);
+                const observation = control.canaryObservation;
                 return (
                   <div key={control.id} className="mt-2 text-xs text-slate-600">
                     <p className="font-semibold text-indigo-700">{connector?.name ?? control.connectorId} · {control.status}</p>
@@ -182,6 +183,10 @@ export default function Home() {
                       {control.canaryBatchSize}-message canary · {control.maxMessagesPerMinute}/min max · {control.remainingMessageCount} remaining
                     </p>
                     <p className="mt-1 text-slate-400">Next batch no earlier than {formatIsoMinute(control.nextBatchNotBefore)}</p>
+                    <p className="mt-1 font-semibold text-amber-700">
+                      Partial-batch canary: {observation.acknowledgedMessageCount} acknowledged · {observation.retryEligibleMessageCount} isolated
+                    </p>
+                    <p className="mt-1 leading-5 text-slate-500">{observation.evidence}</p>
                     <p className="mt-1 leading-5">{control.operatorAction}</p>
                   </div>
                 );
