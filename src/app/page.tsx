@@ -176,6 +176,7 @@ export default function Home() {
               {demoRedriveControls.map(control => {
                 const connector = demoConnectors.find(item => item.id === control.connectorId);
                 const observation = control.canaryObservation;
+                const retryBudget = observation.isolatedItemRetry;
                 return (
                   <div key={control.id} className="mt-2 text-xs text-slate-600">
                     <p className="font-semibold text-indigo-700">{connector?.name ?? control.connectorId} · {control.status}</p>
@@ -187,6 +188,10 @@ export default function Home() {
                       Partial-batch canary: {observation.acknowledgedMessageCount} acknowledged · {observation.retryEligibleMessageCount} isolated
                     </p>
                     <p className="mt-1 leading-5 text-slate-500">{observation.evidence}</p>
+                    <div className="mt-2 rounded-lg border border-red-100 bg-red-50 p-2 text-red-700" role="alert">
+                      <p className="font-semibold">Poison-message hold: {retryBudget.totalProcessingAttempts}/{retryBudget.maxProcessingAttempts} attempts used</p>
+                      <p className="mt-1 leading-5">{retryBudget.operatorAction}</p>
+                    </div>
                     <p className="mt-1 leading-5">{control.operatorAction}</p>
                   </div>
                 );

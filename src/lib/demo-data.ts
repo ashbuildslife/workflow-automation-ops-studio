@@ -260,7 +260,14 @@ export const demoRedriveControls: DlqRedriveControl[] = [
       failedMessageCount: 1,
       acknowledgedMessageCount: 1,
       retryEligibleMessageCount: 1,
-      evidence: "Partial batch response acknowledged the successful Slack alert and isolated only the failed item after schema validation failed."
+      evidence: "Partial batch response acknowledged the successful Slack alert and isolated only the failed item after schema validation failed.",
+      isolatedItemRetry: {
+        messageId: "msg_slack_schema_8841",
+        totalProcessingAttempts: 5,
+        maxProcessingAttempts: 5,
+        status: "retry_budget_exhausted",
+        operatorAction: "Inspect and repair the payload mapping manually, or discard the item with an audit reason; do not redrive it again unchanged."
+      }
     }
   }
 ];

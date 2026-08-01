@@ -178,6 +178,30 @@ describe("DLQ canary partial batch isolation", () => {
   });
 });
 
+describe("poison-message retry budget", () => {
+  const failedCanaries = demoSnapshot.redriveControls.filter(control => control.canaryObservation.failedMessageCount > 0);
+
+  it("stops isolated poison messages after a bounded number of processing attempts", () => {
+    expect(failedCanaries.length).toBeGreaterThan(0);
+
+    for (const control of failedCanaries) {
+      const retryBudget = control.canaryObservation.isolatedItemRetry;
+
+      expect(retryBudget.totalProcessingAttempts).toBeGreaterThanOrEqual(retryBudget.maxProcessingAttempts);
+      expect(retryBudget.status).toBe("retry_budget_exhausted");
+      expect(retryBudget.operatorAction).toMatch(/inspect|repair|discard|manual/i);
+    }
+  });
+
+  it("surfaces the exhausted retry budget before another redrive", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Poison-message hold");
+    expect(pageSource).toContain("retryBudget.totalProcessingAttempts");
+    expect(pageSource).toContain("retryBudget.maxProcessingAttempts");
+  });
+});
+
 describe("webhook recovery safeguards", () => {
   it("ties dead-lettered payloads to workflow and trace context", () => {
     const workflowIds = new Set(demoWorkflows.map(w => w.id));
