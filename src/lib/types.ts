@@ -110,9 +110,19 @@ export interface DlqRedriveControl {
   };
 }
 
+export type OverageStatus = "within_plan" | "approaching_quota" | "projected_overage";
+
+export interface UsageQuotaSummary {
+  planName: string; includedTaskRuns: number; consumedTaskRuns: number;
+  projectedTaskRuns: number; basePerTaskRate: number; overageRateMultiplier: number;
+  overageCapMultiplier: number; projectedOverageCost: number;
+  alertThresholdPercent: number; status: OverageStatus; operatorAction: string;
+}
+
 export interface CostSummary {
   totalRuns: number; totalCost: number; budgetLimit: number;
   costByWorkflow: { name: string; cost: number; runs: number }[];
+  usageQuota: UsageQuotaSummary;
 }
 
 export interface OpsSnapshot {

@@ -457,3 +457,37 @@ describe("credential reauthorization monitoring", () => {
     }
   });
 });
+
+describe("plan usage overage exposure", () => {
+  const quota = demoCostSummary.usageQuota;
+
+  it("projects overage before the plan quota is exhausted", () => {
+    expect(quota.includedTaskRuns).toBeGreaterThan(0);
+    expect(quota.consumedTaskRuns).toBeLessThanOrEqual(quota.includedTaskRuns);
+    expect(quota.projectedTaskRuns).toBeGreaterThan(quota.includedTaskRuns);
+    expect(quota.status).toBe("projected_overage");
+    expect(quota.overageRateMultiplier).toBeGreaterThan(1);
+    expect(quota.overageCapMultiplier).toBeGreaterThanOrEqual(quota.overageRateMultiplier);
+    expect(quota.projectedTaskRuns).toBeLessThanOrEqual(quota.includedTaskRuns * quota.overageCapMultiplier);
+  });
+
+  it("prices projected overage from the base per-task rate", () => {
+    const overageTasks = quota.projectedTaskRuns - quota.includedTaskRuns;
+    expect(overageTasks).toBeGreaterThan(0);
+    expect(quota.projectedOverageCost).toBeCloseTo(overageTasks * quota.basePerTaskRate * quota.overageRateMultiplier, 2);
+  });
+
+  it("breaches the alert threshold before quota exhaustion with operator guidance", () => {
+    const consumedPercent = (quota.consumedTaskRuns / quota.includedTaskRuns) * 100;
+    expect(consumedPercent).toBeGreaterThanOrEqual(quota.alertThresholdPercent);
+    expect(consumedPercent).toBeLessThan(100);
+    expect(quota.operatorAction).toMatch(/throttle|upgrade|quota|overage/i);
+  });
+
+  it("surfaces projected overage cost in the cost dashboard", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+    expect(pageSource).toContain("Overage exposure");
+    expect(pageSource).toContain("usageQuota.projectedOverageCost");
+    expect(pageSource).toContain("usageQuota.operatorAction");
+  });
+});

@@ -63,6 +63,7 @@ export default function Home() {
     return c.auth.status !== "expired" && hoursUntilExpiry <= c.auth.renewalWindowHours;
   }).length;
   const openCircuitBreakers = demoCircuitBreakers.filter(circuit => circuit.state === "open");
+  const usageQuota = demoCostSummary.usageQuota;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-5 py-8 md:px-8 lg:px-10 bg-slate-50">
@@ -338,6 +339,19 @@ export default function Home() {
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
               <div className="h-full rounded-full bg-indigo-600" style={{ width: `${(demoCostSummary.totalCost / demoCostSummary.budgetLimit) * 100}%` }} />
             </div>
+          </div>
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4" role="status" aria-label="Plan usage overage exposure">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-slate-950">Overage exposure</h3>
+              <Badge tone="amber">{usageQuota.status.replace(/_/g, " ")}</Badge>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-slate-800">
+              {usageQuota.planName} plan · {usageQuota.consumedTaskRuns.toLocaleString()} / {usageQuota.includedTaskRuns.toLocaleString()} tasks · projected {usageQuota.projectedTaskRuns.toLocaleString()}
+            </p>
+            <p className="mt-1 text-xs text-red-600">
+              Projected overage ${usageQuota.projectedOverageCost.toFixed(2)} at {usageQuota.overageRateMultiplier}x per task (cap {usageQuota.overageCapMultiplier}x plan volume)
+            </p>
+            <p className="mt-2 text-xs leading-5 text-amber-800">{usageQuota.operatorAction}</p>
           </div>
           <div className="mt-4 space-y-2">
             {demoCostSummary.costByWorkflow.map(w => (

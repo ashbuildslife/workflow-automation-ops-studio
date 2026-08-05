@@ -274,6 +274,13 @@ export const demoRedriveControls: DlqRedriveControl[] = [
 
 export const demoCostSummary: CostSummary = {
   totalRuns: 42, totalCost: 3.47, budgetLimit: 20.00,
+  usageQuota: {
+    planName: "Team", includedTaskRuns: 2000, consumedTaskRuns: 1620,
+    projectedTaskRuns: 2380, basePerTaskRate: 0.025, overageRateMultiplier: 1.25,
+    overageCapMultiplier: 3, projectedOverageCost: 11.875,
+    alertThresholdPercent: 80, status: "projected_overage",
+    operatorAction: "Throttle non-critical workflow schedules or upgrade the plan before month-end; overage bills at 1.25x per task up to the 3x plan-volume cap."
+  },
   costByWorkflow: [
     { name: "Lead Enrichment Pipeline", cost: 1.42, runs: 18 },
     { name: "Overdue Invoice Follow-up", cost: 0.89, runs: 6 },
