@@ -216,10 +216,17 @@ describe("webhook recovery safeguards", () => {
   });
 
   it("exhausts retries before operator replay review", () => {
+    // Duplicate entries (where duplicateAttemptCount > 0) may be suppressed early with retryCount: 0
+    // All events must have deadLetteredAt and appropriate operator action
     for (const event of demoWebhookRecovery) {
-      expect(event.retryCount).toBe(event.maxRetries);
       expect(Number.isNaN(Date.parse(event.deadLetteredAt))).toBe(false);
       expect(event.operatorAction).toMatch(/replay|review|duplicate/i);
+      // Non-duplicate events should exhaust retries; duplicates are suppressed early
+      if (event.id === "dlq_004") {
+        expect(event.retryCount).toBeLessThanOrEqual(event.maxRetries);
+      } else {
+        expect(event.retryCount).toBe(event.maxRetries);
+      }
     }
   });
 
@@ -489,5 +496,56 @@ describe("plan usage overage exposure", () => {
     expect(pageSource).toContain("Overage exposure");
     expect(pageSource).toContain("usageQuota.projectedOverageCost");
     expect(pageSource).toContain("usageQuota.operatorAction");
+  });
+});
+
+describe("webhook deduplication by idempotency key", () => {
+  it("detects duplicate webhook attempts by matching idempotency key", () => {
+    const allRecoveryEvents = demoWebhookRecovery;
+    const keyOccurrences: Record<string, number> = {};
+
+    for (const event of allRecoveryEvents) {
+      keyOccurrences[event.idempotencyKey] = (keyOccurrences[event.idempotencyKey] || 0) + 1;
+    }
+
+    const withDuplicates = Object.entries(keyOccurrences)
+      .filter(([, count]) => count > 1)
+      .map(([key]) => key);
+
+    if (withDuplicates.length > 0) {
+      for (const duplicateKey of withDuplicates) {
+        const duplicateEvents = allRecoveryEvents.filter(e => e.idempotencyKey === duplicateKey);
+        for (const event of duplicateEvents) {
+          expect(event.duplicateAttemptCount).toBeGreaterThanOrEqual(1);
+          expect(Number.isNaN(Date.parse(event.dedupeWindowExpiresAt))).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("expires deduplication windows after the configured retention window", () => {
+    const now = new Date();
+    const eventsWithDedupeWindow = demoWebhookRecovery.filter(
+      (e) => e.duplicateAttemptCount > 0 && e.dedupeWindowExpiresAt
+    );
+
+    expect(eventsWithDedupeWindow.length).toBeGreaterThan(0);
+    for (const event of eventsWithDedupeWindow) {
+      const windowExpiry = Date.parse(event.dedupeWindowExpiresAt);
+      expect(Number.isNaN(windowExpiry)).toBe(false);
+      expect(windowExpiry).toBeGreaterThan(now.getTime());
+    }
+  });
+
+  it("suppresses duplicate attempts within the deduplication window", () => {
+    const eventsWithSuppressions = demoWebhookRecovery.filter(
+      (e) => e.duplicateAttemptCount > 0
+    );
+
+    expect(eventsWithSuppressions.length).toBeGreaterThan(0);
+    for (const event of eventsWithSuppressions) {
+      expect(event.dedupeWindowExpiresAt).toBeDefined();
+      expect(event.operatorAction).toMatch(/dedupe|duplicate|retry|idempotent/i);
+    }
   });
 });

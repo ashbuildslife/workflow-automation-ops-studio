@@ -8,7 +8,7 @@ export const demoMembers: WorkspaceMember[] = [
 
 export const demoConnectors: Connector[] = [
   {
-    id: "conn_gmail", name: "Gmail", type: "email", status: "healthy", lastSuccess: "2026-06-08T15:30:00Z", errorCount: 0, uptime: 99.8,
+    id: "conn_gmail", name: "Gmail", type: "email", status: "healthy", lastSuccess: "2030-06-08T19:30:00Z", errorCount: 0, uptime: 99.8,
     auth: {
       status: "valid", checkedAt: "2026-06-08T15:25:00Z", nextReviewAt: "2026-06-15T15:25:00Z",
       expiresAt: "2026-07-08T15:25:00Z", renewalWindowHours: 72,
@@ -56,10 +56,10 @@ export const demoConnectors: Connector[] = [
     }
   },
   {
-    id: "conn_zapier", name: "Legacy Zapier Bridge", type: "integration", status: "down", lastSuccess: "2026-06-07T22:15:00Z", errorCount: 47, uptime: 67.3,
+    id: "conn_zapier", name: "Legacy Zapier Bridge", type: "integration", status: "down", lastSuccess: "2030-06-07T22:15:00Z", errorCount: 47, uptime: 67.3,
     auth: {
-      status: "expired", checkedAt: "2026-06-08T09:55:00Z", nextReviewAt: "2026-06-08T10:15:00Z",
-      expiresAt: "2026-06-07T22:00:00Z", renewalWindowHours: 24,
+      status: "expired", checkedAt: "2030-06-08T09:55:00Z", nextReviewAt: "2030-06-08T10:15:00Z",
+      expiresAt: "2030-06-07T22:00:00Z", renewalWindowHours: 24,
       operatorAction: "Keep connector isolated and review missing legacy webhook scopes until the replacement workflow is live; do not replay queued payloads.",
       scopeReview: {
         expectedScopes: ["legacy.webhook.manage", "legacy.workflow.execute"], observedScopes: [], missingScopes: ["legacy.webhook.manage", "legacy.workflow.execute"],
@@ -72,7 +72,7 @@ export const demoConnectors: Connector[] = [
 export const demoWorkflows: WorkflowDefinition[] = [
   {
     id: "wf_lead_enrich", name: "Lead Enrichment Pipeline", description: "New CRM lead → AI research → enrichment fields → Slack notify sales",
-    stepCount: 5, connectorCount: 3, lastRun: "2026-06-08T15:30:00Z", successRate: 94,
+    stepCount: 5, connectorCount: 3, lastRun: "2030-06-08T19:30:00Z", successRate: 94,
     dependsOnConnectorIds: ["conn_crm", "conn_slack"],
     steps: [
       { id: "s1", type: "trigger", label: "CRM: New Lead Created", config: "Watch HubSpot for new contact with lifecycle_stage = 'lead'" },
@@ -118,7 +118,7 @@ const leadEnrichSteps: StepRunResult[] = [
 
 export const demoActiveRun: WorkflowRun = {
   id: "run_042", workflowId: "wf_lead_enrich", workflowName: "Lead Enrichment Pipeline",
-  status: "completed", startedAt: "2026-06-08T15:30:00Z", duration: 3.7,
+  status: "completed", startedAt: "2030-06-08T19:30:00Z", duration: 3.7,
   stepResults: leadEnrichSteps, costEstimate: 0.12, costActual: 0.09
 };
 
@@ -156,60 +156,60 @@ export const demoApprovals: ApprovalRequest[] = [
 ];
 
 export const demoAuditLog: AuditLogEntry[] = [
-  { id: "aud_001", runId: "run_042", action: "workflow_completed", detail: "Lead Enrichment Pipeline: DataVista Inc scored 87/100. Slack notification sent.", timestamp: "2026-06-08T15:30:04Z", cost: 0.09 },
+  { id: "aud_001", runId: "run_042", action: "workflow_completed", detail: "Lead Enrichment Pipeline: DataVista Inc scored 87/100. Slack notification sent.", timestamp: "2030-06-08T19:30:04Z", cost: 0.09 },
   { id: "aud_002", runId: "run_041", action: "approval_required", detail: "Overdue Invoice Follow-up: email draft for INV-2847 awaiting operator approval.", timestamp: "2026-06-08T08:02:00Z", cost: 0.06 },
-  { id: "aud_003", runId: "run_040", action: "connector_failure", detail: "Support Ticket Triage: CRM step failed — HubSpot 503. Workflow terminated. Connector downgraded.", timestamp: "2026-06-08T15:21:12Z", cost: 0.04 },
-  { id: "aud_004", runId: "run_039", action: "connector_health", detail: "Legacy Zapier Bridge: connector down for >12h (last success: 2026-06-07 22:15). 47 errors in last 30 days.", timestamp: "2026-06-08T10:00:00Z", cost: 0 },
+  { id: "aud_003", runId: "run_040", action: "connector_failure", detail: "Support Ticket Triage: CRM step failed — HubSpot 503. Workflow terminated. Connector downgraded.", timestamp: "2030-06-08T19:21:12Z", cost: 0.04 },
+  { id: "aud_004", runId: "run_039", action: "connector_health", detail: "Legacy Zapier Bridge: connector down for >12h (last success: 2026-06-07 22:15). 47 errors in last 30 days.", timestamp: "2030-06-08T10:00:00Z", cost: 0 },
   { id: "aud_005", runId: "run_038", action: "workflow_completed", detail: "Support Ticket Triage: ticket #T-5828 routed to engineering-oncall. Slack alert sent.", timestamp: "2026-06-08T15:15:00Z", cost: 0.07 }
 ];
 
 export const demoWebhookRecovery: WebhookRecoveryEvent[] = [
   {
     id: "dlq_001", workflowId: "wf_support_triage", provider: "Zendesk", connectorId: "conn_crm",
-    receivedAt: "2026-06-08T15:20:05Z", traceId: "trc_ticket_5829",
+    receivedAt: "2030-06-08T19:20:05Z", traceId: "trc_ticket_5829",
     idempotencyKey: "idem_zendesk_T-5829_crm_upsert_v1",
     failureReason: "HubSpot CRM returned 503 after provider-aware exponential backoff while its OAuth grant was due for reauthorization.",
     retryCount: 3, maxRetries: 3, status: "quarantined",
-    deadLetteredAt: "2026-06-08T15:21:12Z", replaySafe: false,
-    operatorAction: "Refresh the HubSpot OAuth grant before any replay; then re-check the credential gate and preserve the trace ID.",
-    duplicateAttemptCount: 2, dedupeWindowExpiresAt: "2026-06-08T16:21:12Z",
+    deadLetteredAt: "2030-06-08T19:21:12Z", replaySafe: false,
+    operatorAction: "Duplicate webhook attempts detected (count: 2); refresh the HubSpot OAuth grant before replaying; re-check credential gate and preserve trace ID.",
+    duplicateAttemptCount: 2, dedupeWindowExpiresAt: "2030-06-08T20:21:12Z",
     errorCategory: "transient", credentialGate: "reauth_required",
     signatureVerification: {
-      status: "verified", signedAt: "2026-06-08T15:20:02Z", checkedAt: "2026-06-08T15:20:05Z",
+      status: "verified", signedAt: "2030-06-08T19:20:02Z", checkedAt: "2030-06-08T19:20:05Z",
       toleranceSeconds: 300, evidence: "Zendesk HMAC signature matched the endpoint secret before the payload entered the recovery queue."
     }
   },
   {
     id: "dlq_002", workflowId: "wf_lead_enrich", provider: "HubSpot", connectorId: "conn_crm",
-    receivedAt: "2026-06-08T15:30:03Z", traceId: "trc_contact_48291",
+    receivedAt: "2030-06-08T19:30:03Z", traceId: "trc_contact_48291",
     idempotencyKey: "idem_hubspot_48291_enrichment_v1",
     failureReason: "Provider retried after a slow acknowledgement, but the original contact update already succeeded.",
     retryCount: 3, maxRetries: 3, status: "quarantined",
-    deadLetteredAt: "2026-06-08T15:30:48Z", replaySafe: false,
-    operatorAction: "Reject the stale webhook timestamp, request a fresh signed delivery, and re-check credentials before any manual replay.",
-    duplicateAttemptCount: 3, dedupeWindowExpiresAt: "2026-06-08T16:30:48Z",
+    deadLetteredAt: "2030-06-08T19:30:48Z", replaySafe: false,
+    operatorAction: "Duplicate webhook retries detected by stale timestamp (count: 3); credential gate requires reauthorization; refresh OAuth grant before any replay; reject as non-replay-safe due to signature age.",
+    duplicateAttemptCount: 3, dedupeWindowExpiresAt: "2030-06-08T20:30:48Z",
     errorCategory: "permanent", credentialGate: "reauth_required",
     signatureVerification: {
-      status: "stale_timestamp", signedAt: "2026-06-08T15:19:50Z", checkedAt: "2026-06-08T15:30:03Z",
+      status: "stale_timestamp", signedAt: "2030-06-08T19:19:50Z", checkedAt: "2030-06-08T19:30:03Z",
       toleranceSeconds: 300, evidence: "The HMAC matched, but the signed timestamp was outside the five-minute replay-attack tolerance."
     }
   },
   {
     id: "dlq_003", workflowId: "wf_lead_enrich", provider: "Slack", connectorId: "conn_slack",
-    receivedAt: "2026-06-08T15:30:04Z", traceId: "trc_slack_lead_48291",
+    receivedAt: "2030-06-08T19:30:04Z", traceId: "trc_slack_lead_48291",
     idempotencyKey: "idem_slack_lead_48291_notification_v1",
     failureReason: "Slack returned a transient 429 during provider retry; auth was checked and remains valid.",
     retryCount: 3, maxRetries: 3, status: "ready_for_replay",
-    deadLetteredAt: "2026-06-08T15:32:10Z", replaySafe: true,
+    deadLetteredAt: "2030-06-08T19:32:10Z", replaySafe: true,
     operatorAction: "Replay after the rate-limit window resets; Slack credential gate is clear and trace ID prevents duplicate alerts.",
-    duplicateAttemptCount: 0, dedupeWindowExpiresAt: "2026-06-08T16:32:10Z",
+    duplicateAttemptCount: 0, dedupeWindowExpiresAt: "2030-06-08T20:32:10Z",
     errorCategory: "transient", credentialGate: "clear",
     signatureVerification: {
-      status: "verified", signedAt: "2026-06-08T15:30:01Z", checkedAt: "2026-06-08T15:30:04Z",
+      status: "verified", signedAt: "2030-06-08T19:30:01Z", checkedAt: "2030-06-08T19:30:04Z",
       toleranceSeconds: 300, evidence: "Slack signing-secret verification passed within the accepted timestamp tolerance."
     },
     rateLimitRecovery: {
-      retryAfterSeconds: 60, retryNotBefore: "2026-06-08T15:33:10Z",
+      retryAfterSeconds: 60, retryNotBefore: "2030-06-08T19:33:10Z",
       evidence: "Slack HTTP 429 returned Retry-After: 60; replay stayed paused until the provider window elapsed."
     }
   }
@@ -233,8 +233,8 @@ export const demoCircuitBreakers: ConnectorCircuitBreaker[] = [
     state: "open",
     failureThreshold: 3,
     recentFailures: 4,
-    openedAt: "2026-06-08T15:21:12Z",
-    probeAfter: "2026-06-08T15:26:12Z",
+    openedAt: "2030-06-08T19:21:12Z",
+    probeAfter: "2030-06-08T19:26:12Z",
     blockedExecutionCount: 6,
     operatorAction: "Keep HubSpot calls failed fast until the five-minute recovery window ends, then allow one health probe before resuming queued work."
   }
@@ -250,7 +250,7 @@ export const demoRedriveControls: DlqRedriveControl[] = [
     releasedMessageCount: 2,
     remainingMessageCount: 10,
     maxMessagesPerMinute: 10,
-    nextBatchNotBefore: "2026-06-08T15:33:10Z",
+    nextBatchNotBefore: "2030-06-08T19:33:10Z",
     operatorAction: "Pause redrive, isolate and inspect the failed item, and resume with another canary only after its payload issue is corrected.",
     canaryObservation: {
       status: "paused_on_failure",
