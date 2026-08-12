@@ -549,3 +549,57 @@ describe("webhook deduplication by idempotency key", () => {
     }
   });
 });
+
+describe("step timeout detection", () => {
+  const timeoutRuns = demoRunHistory.filter(run =>
+    run.stepResults.some(step => step.timedOut)
+  );
+
+  it("flags steps that exceed their configured timeout", () => {
+    expect(timeoutRuns.length).toBeGreaterThan(0);
+
+    for (const run of timeoutRuns) {
+      const timedOutSteps = run.stepResults.filter(step => step.timedOut);
+      expect(timedOutSteps.length).toBeGreaterThan(0);
+
+      for (const step of timedOutSteps) {
+        expect(step.status).toBe("failed");
+        expect(step.timedOut).toBe(true);
+        expect(step.error).toBeDefined();
+        expect(step.error!.toLowerCase()).toMatch(/time|timeout|exceeded/i);
+      }
+    }
+  });
+
+  it("records duration that exceeds the configured step timeout", () => {
+    const workflowTimeoutMap = new Map<string, number>();
+    for (const wf of demoWorkflows) {
+      for (const step of wf.steps) {
+        if (step.timeoutSeconds) {
+          workflowTimeoutMap.set(`${wf.id}:${step.id}`, step.timeoutSeconds);
+        }
+      }
+    }
+
+    for (const run of timeoutRuns) {
+      for (const step of run.stepResults.filter(s => s.timedOut)) {
+        const timeoutKey = `${run.workflowId}:${step.stepId}`;
+        const configuredTimeout = workflowTimeoutMap.get(timeoutKey);
+        expect(configuredTimeout).toBeDefined();
+        expect(step.duration).toBeGreaterThan(configuredTimeout!);
+      }
+    }
+  });
+
+  it("keeps workflow runs in a terminal failed state after a step times out", () => {
+    for (const run of timeoutRuns) {
+      expect(run.status).toBe("failed");
+      expect(run.duration).toBeGreaterThan(0);
+
+      const downstreamSteps = run.stepResults.filter(
+        s => s.status === "skipped" && s.input.toLowerCase().includes("timed out")
+      );
+      expect(downstreamSteps.length).toBeGreaterThan(0);
+    }
+  });
+});

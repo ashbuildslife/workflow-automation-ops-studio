@@ -78,7 +78,7 @@ export const demoWorkflows: WorkflowDefinition[] = [
       { id: "s1", type: "trigger", label: "CRM: New Lead Created", config: "Watch HubSpot for new contact with lifecycle_stage = 'lead'" },
       { id: "s2", type: "ai_analyze", label: "AI: Research Company", config: "Look up company domain, headcount, industry, recent news" },
       { id: "s3", type: "transform", label: "Transform: Score & Enrich", config: "Calculate lead score from signals. Map to enrichment fields." },
-      { id: "s4", type: "crm_upsert", label: "CRM: Update Lead Record", config: "Write enrichment fields back to HubSpot contact" },
+      { id: "s4", type: "crm_upsert", label: "CRM: Update Lead Record", config: "Write enrichment fields back to HubSpot contact", timeoutSeconds: 30 },
       { id: "s5", type: "outbound_slack", label: "Slack: Notify Sales", config: "Post to #sales-leads with summary and link to CRM record" }
     ]
   },
@@ -102,7 +102,7 @@ export const demoWorkflows: WorkflowDefinition[] = [
     steps: [
       { id: "s1", type: "trigger", label: "Trigger: New Ticket", config: "Zendesk webhook on ticket.created" },
       { id: "s2", type: "ai_analyze", label: "AI: Classify & Route", config: "Classify urgency, sentiment, category. Determine target team." },
-      { id: "s3", type: "crm_upsert", label: "CRM: Update Customer", config: "Update support tier and last ticket date on customer record" },
+      { id: "s3", type: "crm_upsert", label: "CRM: Update Customer", config: "Update support tier and last ticket date on customer record", timeoutSeconds: 30 },
       { id: "s4", type: "outbound_slack", label: "Slack: Alert Team", config: "Post to target team channel with ticket summary" }
     ]
   }
@@ -143,6 +143,17 @@ export const demoRunHistory: WorkflowRun[] = [
       { stepId: "s4", stepLabel: "Slack: Alert Team", status: "skipped", input: "Skipped — CRM step failed", output: "", duration: 0, retries: 0 }
     ],
     costEstimate: 0.08, costActual: 0.04
+  },
+  {
+    id: "run_043", workflowId: "wf_support_triage", workflowName: "Support Ticket Triage",
+    status: "failed", startedAt: "2026-06-08T14:05:00Z", duration: 90.5,
+    stepResults: [
+      { stepId: "s1", stepLabel: "Trigger: New Ticket", status: "success", input: "Webhook: ticket #T-5825 created", output: "Ticket: \"Cannot access admin panel\" — customer: NorthStar Logistics", duration: 0.3, retries: 0 },
+      { stepId: "s2", stepLabel: "AI: Classify & Route", status: "success", input: "Ticket: admin panel access, NorthStar Logistics", output: "Urgency: high. Sentiment: frustrated. Category: account/access. Route to: support-tier2.", duration: 1.1, retries: 0 },
+      { stepId: "s3", stepLabel: "CRM: Update Customer", status: "failed", input: "Customer: NorthStar Logistics, update support_tier", output: "", duration: 90.2, error: "HubSpot CRM API: connection timed out after 30s per attempt across 3 retries. Step exceeded its configured timeout of 30s.", retries: 3, errorCategory: "transient", timedOut: true },
+      { stepId: "s4", stepLabel: "Slack: Alert Team", status: "skipped", input: "Skipped — CRM step timed out", output: "", duration: 0, retries: 0 }
+    ],
+    costEstimate: 0.08, costActual: 0.12
   }
 ];
 

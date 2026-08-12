@@ -38,6 +38,7 @@ export interface Connector {
 
 export interface WorkflowStep {
   id: string; type: StepType; label: string; config: string;
+  timeoutSeconds?: number;
 }
 
 export interface WorkflowDefinition {
@@ -49,6 +50,7 @@ export interface WorkflowDefinition {
 export interface StepRunResult {
   stepId: string; stepLabel: string; status: "success" | "failed" | "skipped";
   input: string; output: string; duration: number; error?: string; retries: number; errorCategory?: ErrorCategory;
+  timedOut?: boolean;
 }
 
 export interface WorkflowRun {
