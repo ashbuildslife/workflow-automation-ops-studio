@@ -13,6 +13,17 @@ export type RedriveCanaryObservationStatus = "pending" | "passed" | "paused_on_f
 export type IsolatedItemRetryStatus = "retry_budget_exhausted";
 export type StepType = "trigger" | "transform" | "ai_analyze" | "ai_generate" | "outbound_email" | "outbound_slack" | "crm_upsert" | "sheets_append" | "approval_gate";
 
+export type ScheduleTriggerStatus = "on_time" | "behind" | "overdue";
+export type MissedRunPolicy = "skip_missed" | "bounded_backfill" | "awaiting_decision";
+
+export interface ScheduledTriggerHealth {
+  id: string; workflowId: string; scheduleLabel: string; cronExpression: string;
+  lastFiredAt: string | null; nextExpectedAt: string;
+  missedRunCount: number; missedSince: string | null;
+  catchUpPolicy: MissedRunPolicy; boundedBackfillLimit: number;
+  preventOverlap: boolean; status: ScheduleTriggerStatus; operatorAction: string;
+}
+
 export interface WorkspaceMember {
   id: string; name: string; role: "admin" | "operator" | "viewer"; initials: string;
 }
@@ -139,5 +150,6 @@ export interface OpsSnapshot {
   concurrency: ExecutionConcurrencySummary;
   circuitBreakers: ConnectorCircuitBreaker[];
   redriveControls: DlqRedriveControl[];
+  scheduleHealth: ScheduledTriggerHealth[];
   costSummary: CostSummary;
 }

@@ -51,6 +51,7 @@ The demo models three workflows: lead enrichment, overdue invoice follow-up, and
 - **Run cost tracking**: Per-workflow cost with estimated vs. actual. Monthly budget gauge
 - **Retry policies**: Failed steps show retry count and error reason (e.g., "HubSpot CRM API: 503 after 3 retries")
 - **Audit log**: Every action recorded with cost, timestamp, and detail
+- **Schedule health**: Missed scheduled runs surface with a catch-up policy (skip, bounded backfill, or hold for decision) and overlap prevention, so a quiet schedule never becomes a silent failure
 
 ## Tech stack
 
@@ -59,7 +60,7 @@ The demo models three workflows: lead enrichment, overdue invoice follow-up, and
 | Framework | Next.js App Router |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
-| Testing | Vitest: 8 tests covering connector health, workflow structure, execution traces, and cost tracking |
+| Testing | Vitest: 60 tests covering connector health, credential drift, concurrency pressure, circuit breakers, DLQ redrive, deduplication, overage exposure, timeouts, and schedule health |
 | CI | GitHub Actions |
 | Data | TypeScript fixture data, no real connectors, no API keys required |
 
@@ -87,7 +88,7 @@ Open `http://localhost:3000`.
 ```bash
 npm run lint        # ESLint with zero warnings
 npm run typecheck   # TypeScript strict mode
-npm test            # Vitest. 8 tests
+npm test            # Vitest. 60 tests
 npm run build       # Production build
 ```
 
@@ -100,6 +101,7 @@ All data is fictional and public-safe:
 - 3 recent runs: completed (lead enrichment), awaiting approval (invoice follow-up), failed (support triage. CRM connector failure)
 - 1 approval request with draft email content
 - 5 audit log entries with cost tracking
+- 3 schedule health records: an on-time fallback poll, a weekday scan behind with a bounded backfill of 1, and a silently stopped weekly digest awaiting a catch-up decision
 
 ## Screenshot refresh
 

@@ -1,4 +1,4 @@
-import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, DlqRedriveControl, ExecutionConcurrencySummary, OpsSnapshot, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
+import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, DlqRedriveControl, ExecutionConcurrencySummary, OpsSnapshot, ScheduledTriggerHealth, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
 
 export const demoMembers: WorkspaceMember[] = [
   { id: "m_1", name: "Jordan Park", role: "admin", initials: "JP" },
@@ -283,6 +283,54 @@ export const demoRedriveControls: DlqRedriveControl[] = [
   }
 ];
 
+export const demoScheduleHealth: ScheduledTriggerHealth[] = [
+  {
+    id: "sch_lead_enrich_poll",
+    workflowId: "wf_lead_enrich",
+    scheduleLabel: "HubSpot new-lead poll (fallback trigger)",
+    cronExpression: "*/15 * * * *",
+    lastFiredAt: "2026-06-08T19:30:00Z",
+    nextExpectedAt: "2026-06-08T19:45:00Z",
+    missedRunCount: 0,
+    missedSince: null,
+    catchUpPolicy: "skip_missed",
+    boundedBackfillLimit: 0,
+    preventOverlap: true,
+    status: "on_time",
+    operatorAction: "No action needed; the 15-minute poll is current and overlap prevention keeps a single instance running."
+  },
+  {
+    id: "sch_invoice_daily",
+    workflowId: "wf_invoice_chase",
+    scheduleLabel: "Invoice scan (weekdays 08:00)",
+    cronExpression: "0 8 * * 1-5",
+    lastFiredAt: "2026-06-04T08:00:00Z",
+    nextExpectedAt: "2026-06-09T08:00:00Z",
+    missedRunCount: 2,
+    missedSince: "2026-06-05T08:00:00Z",
+    catchUpPolicy: "bounded_backfill",
+    boundedBackfillLimit: 1,
+    preventOverlap: true,
+    status: "behind",
+    operatorAction: "Backfill at most one missed invoice scan, then verify the schedule is active; catch-up must not fire one run per missed occurrence."
+  },
+  {
+    id: "sch_support_weekly_digest",
+    workflowId: "wf_support_triage",
+    scheduleLabel: "Weekly ticket digest (Mon 09:00)",
+    cronExpression: "0 9 * * 1",
+    lastFiredAt: "2026-05-25T09:00:00Z",
+    nextExpectedAt: "2026-06-15T09:00:00Z",
+    missedRunCount: 2,
+    missedSince: "2026-05-25T09:00:00Z",
+    catchUpPolicy: "awaiting_decision",
+    boundedBackfillLimit: 0,
+    preventOverlap: true,
+    status: "overdue",
+    operatorAction: "The schedule silently stopped after the May 25 run; confirm whether it is still enabled, then decide between backfill and skip, and never re-enable a full catch-up burst."
+  }
+];
+
 export const demoCostSummary: CostSummary = {
   totalRuns: 42, totalCost: 3.47, budgetLimit: 20.00,
   usageQuota: {
@@ -311,5 +359,6 @@ export const demoSnapshot: OpsSnapshot = {
   concurrency: demoConcurrencySummary,
   circuitBreakers: demoCircuitBreakers,
   redriveControls: demoRedriveControls,
+  scheduleHealth: demoScheduleHealth,
   costSummary: demoCostSummary
 };

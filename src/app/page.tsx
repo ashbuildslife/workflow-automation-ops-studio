@@ -1,6 +1,6 @@
 import {
   demoActiveRun, demoApprovals, demoAuditLog, demoCircuitBreakers, demoConcurrencySummary, demoConnectors, demoCostSummary,
-  demoMembers, demoRedriveControls, demoWebhookRecovery, demoWorkflows
+  demoMembers, demoRedriveControls, demoScheduleHealth, demoWebhookRecovery, demoWorkflows
 } from "@/lib/demo-data";
 import type { ConnectorStatus, CredentialStatus, RunStatus } from "@/lib/types";
 
@@ -64,6 +64,7 @@ export default function Home() {
   }).length;
   const openCircuitBreakers = demoCircuitBreakers.filter(circuit => circuit.state === "open");
   const usageQuota = demoCostSummary.usageQuota;
+  const scheduleAttentionCount = demoScheduleHealth.filter(s => s.status !== "on_time").length;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-5 py-8 md:px-8 lg:px-10 bg-slate-50">
@@ -163,6 +164,33 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+          <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4" role="status" aria-label="Scheduled trigger health">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-slate-950">Schedule health</h3>
+              <Badge tone={scheduleAttentionCount > 0 ? "amber" : "green"}>{scheduleAttentionCount} need attention</Badge>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              Scheduled triggers surface missed runs so a quiet schedule never becomes a silent failure, and catch-up stays bounded instead of firing one run per missed occurrence.
+            </p>
+            <div className="mt-3 space-y-2">
+              {demoScheduleHealth.map(schedule => {
+                const workflow = demoWorkflows.find(item => item.id === schedule.workflowId);
+                return (
+                  <div key={schedule.id} className={`rounded-xl border p-3 text-xs ${schedule.status === "overdue" ? "border-red-200 bg-red-50/50" : schedule.status === "behind" ? "border-amber-200 bg-amber-50/50" : "border-slate-100 bg-slate-50"}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-slate-900">{workflow?.name ?? schedule.workflowId}</p>
+                      <Badge tone={schedule.status === "on_time" ? "green" : schedule.status === "behind" ? "amber" : "red"}>{schedule.status.replace(/_/g, " ")}</Badge>
+                    </div>
+                    <p className="mt-1 text-slate-500">{schedule.scheduleLabel} · {schedule.cronExpression} · next {formatIsoMinute(schedule.nextExpectedAt)}</p>
+                    <p className="mt-1 font-semibold text-slate-700">
+                      {schedule.missedRunCount} missed run{schedule.missedRunCount === 1 ? "" : "s"} · catch-up: {schedule.catchUpPolicy.replace(/_/g, " ")}{schedule.catchUpPolicy === "bounded_backfill" ? ` (max ${schedule.boundedBackfillLimit})` : ""} · overlap prevention {schedule.preventOverlap ? "on" : "off"}
+                    </p>
+                    {schedule.status !== "on_time" && <p className="mt-1 leading-5 text-amber-800">{schedule.operatorAction}</p>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4">
             <div className="flex items-center justify-between gap-2">

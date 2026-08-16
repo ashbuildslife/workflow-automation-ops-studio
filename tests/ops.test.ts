@@ -603,3 +603,73 @@ describe("step timeout detection", () => {
     }
   });
 });
+
+describe("scheduled trigger health", () => {
+  const schedules = demoSnapshot.scheduleHealth;
+
+  it("tracks every schedule against a real workflow", () => {
+    expect(schedules.length).toBeGreaterThanOrEqual(3);
+
+    for (const schedule of schedules) {
+      expect(demoWorkflows.some(wf => wf.id === schedule.workflowId)).toBe(true);
+    }
+  });
+
+  it("surfaces missed and silently stopped schedules", () => {
+    const missedSchedules = schedules.filter(schedule => schedule.missedRunCount > 0);
+
+    expect(missedSchedules.length).toBeGreaterThanOrEqual(2);
+    for (const schedule of missedSchedules) {
+      expect(schedule.status).not.toBe("on_time");
+      expect(schedule.missedSince).not.toBeNull();
+      expect(Number.isNaN(Date.parse(schedule.missedSince!))).toBe(false);
+      expect(schedule.operatorAction).toMatch(/backfill|skip|catch-up|re-enable|verify|decision/i);
+    }
+  });
+
+  it("bounds catch-up instead of replaying every missed run", () => {
+    const backfills = schedules.filter(schedule => schedule.catchUpPolicy === "bounded_backfill");
+
+    expect(backfills.length).toBeGreaterThan(0);
+    for (const schedule of backfills) {
+      expect(schedule.boundedBackfillLimit).toBeGreaterThan(0);
+      expect(schedule.boundedBackfillLimit).toBeLessThan(schedule.missedRunCount);
+    }
+
+    for (const schedule of schedules.filter(item => item.catchUpPolicy === "skip_missed")) {
+      expect(schedule.boundedBackfillLimit).toBe(0);
+    }
+  });
+
+  it("holds undecided schedules before any backfill", () => {
+    const undecided = schedules.filter(schedule => schedule.catchUpPolicy === "awaiting_decision");
+
+    expect(undecided.length).toBeGreaterThan(0);
+    for (const schedule of undecided) {
+      expect(schedule.boundedBackfillLimit).toBe(0);
+      expect(schedule.missedRunCount).toBeGreaterThan(0);
+      expect(schedule.operatorAction).toMatch(/decide|decision|choose/i);
+    }
+  });
+
+  it("keeps expected run times parseable and prevents overlapping executions", () => {
+    for (const schedule of schedules) {
+      expect(Number.isNaN(Date.parse(schedule.nextExpectedAt))).toBe(false);
+      expect(schedule.preventOverlap).toBe(true);
+
+      if (schedule.lastFiredAt) {
+        expect(Date.parse(schedule.nextExpectedAt)).toBeGreaterThan(Date.parse(schedule.lastFiredAt));
+      }
+    }
+  });
+
+  it("surfaces missed-run counts and catch-up policy on the dashboard", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Schedule health");
+    expect(pageSource).toContain("schedule.missedRunCount");
+    expect(pageSource).toContain("schedule.catchUpPolicy");
+    expect(pageSource).toContain("schedule.boundedBackfillLimit");
+    expect(pageSource).toContain("schedule.preventOverlap");
+  });
+});
