@@ -673,3 +673,64 @@ describe("scheduled trigger health", () => {
     expect(pageSource).toContain("schedule.preventOverlap");
   });
 });
+
+describe("schedule timezone and DST safety", () => {
+  const schedules = demoSnapshot.scheduleHealth;
+
+  it("records the cron engine timezone and a local fire label for every schedule", () => {
+    expect(schedules.length).toBeGreaterThanOrEqual(4);
+
+    for (const schedule of schedules) {
+      expect(schedule.timezone.length).toBeGreaterThan(0);
+      expect(schedule.operatorTimezone.length).toBeGreaterThan(0);
+      expect(schedule.nextLocalFireLabel.length).toBeGreaterThan(0);
+      expect(["aligned", "local_hour_drift", "dst_offset_drift"]).toContain(schedule.timezoneStatus);
+    }
+  });
+
+  it("flags schedules whose UTC cron fires at the wrong local hour", () => {
+    const drifted = schedules.filter(schedule => schedule.timezoneStatus === "local_hour_drift");
+
+    expect(drifted.length).toBeGreaterThan(0);
+    for (const schedule of drifted) {
+      expect(schedule.timezone).toBe("UTC");
+      expect(schedule.operatorTimezone).not.toBe("UTC");
+      expect(schedule.operatorAction).toMatch(/UTC|local|timezone|re-encode/i);
+
+      const utcHour = new Date(schedule.nextExpectedAt).getUTCHours();
+      const localLabelHour = Number.parseInt(schedule.nextLocalFireLabel.slice(0, 2), 10);
+
+      expect(Number.isNaN(localLabelHour)).toBe(false);
+      expect(localLabelHour).not.toBe(utcHour);
+    }
+  });
+
+  it("catches fixed-offset schedules that drift after a DST transition", () => {
+    const dstDrifted = schedules.filter(schedule => schedule.timezoneStatus === "dst_offset_drift");
+
+    expect(dstDrifted.length).toBeGreaterThan(0);
+    for (const schedule of dstDrifted) {
+      expect(schedule.timezone).toMatch(/^UTC[+-]/);
+      expect(schedule.nextLocalFireLabel).toMatch(/DST|was/i);
+      expect(schedule.operatorAction).toMatch(/IANA|daylight|DST|offset|re-point/i);
+    }
+  });
+
+  it("keeps on-time schedules with the wrong local hour visible to operators", () => {
+    const onTimeDrifted = schedules.filter(schedule => schedule.status === "on_time" && schedule.timezoneStatus !== "aligned");
+
+    expect(onTimeDrifted.length).toBeGreaterThan(0);
+    for (const schedule of onTimeDrifted) {
+      expect(schedule.missedRunCount).toBe(0);
+    }
+  });
+
+  it("surfaces engine timezone and local fire labels on the dashboard", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Schedule health");
+    expect(pageSource).toContain("schedule.nextLocalFireLabel");
+    expect(pageSource).toContain("schedule.timezoneStatus");
+    expect(pageSource).toContain("cron engine timezone");
+  });
+});

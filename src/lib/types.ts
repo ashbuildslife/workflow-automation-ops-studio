@@ -15,6 +15,7 @@ export type StepType = "trigger" | "transform" | "ai_analyze" | "ai_generate" | 
 
 export type ScheduleTriggerStatus = "on_time" | "behind" | "overdue";
 export type MissedRunPolicy = "skip_missed" | "bounded_backfill" | "awaiting_decision";
+export type ScheduleTimezoneStatus = "aligned" | "local_hour_drift" | "dst_offset_drift";
 
 export interface ScheduledTriggerHealth {
   id: string; workflowId: string; scheduleLabel: string; cronExpression: string;
@@ -22,6 +23,7 @@ export interface ScheduledTriggerHealth {
   missedRunCount: number; missedSince: string | null;
   catchUpPolicy: MissedRunPolicy; boundedBackfillLimit: number;
   preventOverlap: boolean; status: ScheduleTriggerStatus; operatorAction: string;
+  timezone: string; operatorTimezone: string; nextLocalFireLabel: string; timezoneStatus: ScheduleTimezoneStatus;
 }
 
 export interface WorkspaceMember {

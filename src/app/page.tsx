@@ -171,7 +171,7 @@ export default function Home() {
               <Badge tone={scheduleAttentionCount > 0 ? "amber" : "green"}>{scheduleAttentionCount} need attention</Badge>
             </div>
             <p className="mt-1 text-xs leading-5 text-slate-600">
-              Scheduled triggers surface missed runs so a quiet schedule never becomes a silent failure, and catch-up stays bounded instead of firing one run per missed occurrence.
+              Scheduled triggers surface missed runs so a quiet schedule never becomes a silent failure, and catch-up stays bounded instead of firing one run per missed occurrence. Every schedule also records the cron engine timezone and the local fire hour, so UTC drift and fixed-offset DST mistakes cannot silently shift when work actually runs.
             </p>
             <div className="mt-3 space-y-2">
               {demoScheduleHealth.map(schedule => {
@@ -183,10 +183,16 @@ export default function Home() {
                       <Badge tone={schedule.status === "on_time" ? "green" : schedule.status === "behind" ? "amber" : "red"}>{schedule.status.replace(/_/g, " ")}</Badge>
                     </div>
                     <p className="mt-1 text-slate-500">{schedule.scheduleLabel} · {schedule.cronExpression} · next {formatIsoMinute(schedule.nextExpectedAt)}</p>
+                    <p className="mt-1 text-slate-500">Fires {schedule.nextLocalFireLabel} · cron engine timezone {schedule.timezone}</p>
+                    {schedule.timezoneStatus !== "aligned" && (
+                      <p className={`mt-1 font-semibold ${schedule.timezoneStatus === "local_hour_drift" ? "text-amber-700" : "text-red-600"}`}>
+                        Timezone: {schedule.timezoneStatus.replace(/_/g, " ")} · {schedule.operatorAction}
+                      </p>
+                    )}
                     <p className="mt-1 font-semibold text-slate-700">
                       {schedule.missedRunCount} missed run{schedule.missedRunCount === 1 ? "" : "s"} · catch-up: {schedule.catchUpPolicy.replace(/_/g, " ")}{schedule.catchUpPolicy === "bounded_backfill" ? ` (max ${schedule.boundedBackfillLimit})` : ""} · overlap prevention {schedule.preventOverlap ? "on" : "off"}
                     </p>
-                    {schedule.status !== "on_time" && <p className="mt-1 leading-5 text-amber-800">{schedule.operatorAction}</p>}
+                    {schedule.status !== "on_time" && schedule.timezoneStatus === "aligned" && <p className="mt-1 leading-5 text-amber-800">{schedule.operatorAction}</p>}
                   </div>
                 );
               })}

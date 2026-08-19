@@ -296,6 +296,10 @@ export const demoScheduleHealth: ScheduledTriggerHealth[] = [
     catchUpPolicy: "skip_missed",
     boundedBackfillLimit: 0,
     preventOverlap: true,
+    timezone: "UTC",
+    operatorTimezone: "America/Chicago",
+    nextLocalFireLabel: "14:45 America/Chicago",
+    timezoneStatus: "aligned",
     status: "on_time",
     operatorAction: "No action needed; the 15-minute poll is current and overlap prevention keeps a single instance running."
   },
@@ -311,8 +315,12 @@ export const demoScheduleHealth: ScheduledTriggerHealth[] = [
     catchUpPolicy: "bounded_backfill",
     boundedBackfillLimit: 1,
     preventOverlap: true,
+    timezone: "UTC",
+    operatorTimezone: "America/Chicago",
+    nextLocalFireLabel: "03:00 America/Chicago",
+    timezoneStatus: "local_hour_drift",
     status: "behind",
-    operatorAction: "Backfill at most one missed invoice scan, then verify the schedule is active; catch-up must not fire one run per missed occurrence."
+    operatorAction: "Backfill at most one missed invoice scan, then verify the schedule is active. The cron engine evaluates in UTC, so the intended 08:00 local scan fires at 03:00 in America/Chicago; re-encode the schedule in the workspace timezone if 08:00 local was intended."
   },
   {
     id: "sch_support_weekly_digest",
@@ -320,14 +328,37 @@ export const demoScheduleHealth: ScheduledTriggerHealth[] = [
     scheduleLabel: "Weekly ticket digest (Mon 09:00)",
     cronExpression: "0 9 * * 1",
     lastFiredAt: "2026-05-25T09:00:00Z",
-    nextExpectedAt: "2026-06-15T09:00:00Z",
+    nextExpectedAt: "2026-06-15T14:00:00Z",
     missedRunCount: 2,
     missedSince: "2026-05-25T09:00:00Z",
     catchUpPolicy: "awaiting_decision",
     boundedBackfillLimit: 0,
     preventOverlap: true,
+    timezone: "America/Chicago",
+    operatorTimezone: "America/Chicago",
+    nextLocalFireLabel: "09:00 America/Chicago",
+    timezoneStatus: "aligned",
     status: "overdue",
     operatorAction: "The schedule silently stopped after the May 25 run; confirm whether it is still enabled, then decide between backfill and skip, and never re-enable a full catch-up burst."
+  },
+  {
+    id: "sch_dunning_friday",
+    workflowId: "wf_invoice_chase",
+    scheduleLabel: "Dunning escalation scan (Fridays)",
+    cronExpression: "0 17 * * 5",
+    lastFiredAt: "2026-06-05T23:00:00Z",
+    nextExpectedAt: "2026-06-12T23:00:00Z",
+    missedRunCount: 0,
+    missedSince: null,
+    catchUpPolicy: "skip_missed",
+    boundedBackfillLimit: 0,
+    preventOverlap: true,
+    timezone: "UTC-06:00",
+    operatorTimezone: "America/Chicago",
+    nextLocalFireLabel: "18:00 America/Chicago (was 17:00 before the March 8 DST change)",
+    timezoneStatus: "dst_offset_drift",
+    status: "on_time",
+    operatorAction: "The schedule is pinned to a fixed UTC-06:00 offset instead of the America/Chicago IANA zone, so it fired at 17:00 local before the March 8 DST change and now fires at 18:00. Re-point it at the IANA zone to track daylight saving automatically, then confirm 17:00 is the intended local hour."
   }
 ];
 
