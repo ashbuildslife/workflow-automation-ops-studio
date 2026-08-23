@@ -343,6 +343,38 @@ describe("approval gate safety", () => {
   });
 });
 
+describe("approval gate SLA expiry", () => {
+  const approvals = demoApprovals;
+
+  it("records a deadline and escalation owner for every pending approval", () => {
+    expect(approvals.length).toBeGreaterThan(0);
+
+    for (const approval of approvals) {
+      expect(Number.isNaN(Date.parse(approval.dueAt))).toBe(false);
+      expect(Date.parse(approval.dueAt)).toBeGreaterThan(Date.parse(approval.requestedAt));
+      expect(approval.approverName.length).toBeGreaterThan(0);
+      expect(approval.escalationOwner.length).toBeGreaterThan(0);
+      expect(["on_track", "due_soon", "breached"]).toContain(approval.slaStatus);
+    }
+  });
+
+  it("routes breached approval gates to a named escalation owner", () => {
+    const breached = approvals.filter(approval => approval.slaStatus === "breached");
+
+    expect(breached.length).toBeGreaterThan(0);
+    expect(breached.every(approval => /escalat|overdue|expiry/i.test(approval.operatorAction))).toBe(true);
+  });
+
+  it("surfaces approval SLA state before the downstream action", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Approval SLA");
+    expect(pageSource).toContain("app.slaStatus");
+    expect(pageSource).toContain("app.dueAt");
+    expect(pageSource).toContain("app.escalationOwner");
+  });
+});
+
 describe("error classification", () => {
   it("only marks transient webhook failures replay-ready when the credential gate is clear", () => {
     const transient = demoWebhookRecovery.filter(e => e.errorCategory === "transient");

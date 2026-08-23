@@ -342,6 +342,15 @@ export default function Home() {
                     <Badge tone="amber">Awaiting approval</Badge>
                   </div>
                   <p className="mt-2 text-xs leading-5 text-slate-600">{app.detail}</p>
+                  <div className={`mt-3 rounded-xl border p-3 ${app.slaStatus === "breached" ? "border-red-200 bg-red-50" : app.slaStatus === "due_soon" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`} role={app.slaStatus === "breached" ? "alert" : "status"} aria-label="Approval SLA">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-slate-950">Approval SLA</p>
+                      <Badge tone={app.slaStatus === "breached" ? "red" : app.slaStatus === "due_soon" ? "amber" : "green"}>{app.slaStatus.replace(/_/g, " ")}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600">Approver: {app.approverName} · due {formatIsoMinute(app.dueAt)}</p>
+                    <p className="mt-1 text-xs text-slate-600">Escalation owner: {app.escalationOwner}</p>
+                    <p className="mt-1 text-xs leading-5 text-amber-800">{app.operatorAction}</p>
+                  </div>
                   <div className="mt-3 flex gap-2">
                     <button className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">Approve & Send</button>
                     <button className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">Edit Draft</button>

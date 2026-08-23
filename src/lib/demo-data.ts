@@ -162,7 +162,12 @@ export const demoApprovals: ApprovalRequest[] = [
     id: "app_001", runId: "run_041", workflowName: "Overdue Invoice Follow-up",
     stepLabel: "AI: Draft Follow-up Email", action: "Send email to WestGate Partners re: INV-2847",
     detail: "Subject: \"Invoice INV-2847 — Payment Overdue\"\nTo: billing@westgate-partners.com\nBody: [AI-generated draft — 3 paragraphs, polite but firm, includes payment link]\n\nInvoice: #INV-2847\nAmount: $8,200\nDue: 2026-04-22 (47 days overdue)\n\nThis email will be sent via Gmail and BCC'd to ops@.",
-    requestedAt: "2026-06-08T08:02:00Z"
+    requestedAt: "2026-06-08T08:02:00Z",
+    approverName: "Nina Vasquez",
+    dueAt: "2026-06-08T09:00:00Z",
+    escalationOwner: "Jordan Park",
+    slaStatus: "breached",
+    operatorAction: "Approval SLA expired at 09:00 UTC; escalate to Jordan Park before sending the outbound email."
   }
 ];
 

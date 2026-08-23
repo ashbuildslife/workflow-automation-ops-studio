@@ -16,6 +16,7 @@ export type StepType = "trigger" | "transform" | "ai_analyze" | "ai_generate" | 
 export type ScheduleTriggerStatus = "on_time" | "behind" | "overdue";
 export type MissedRunPolicy = "skip_missed" | "bounded_backfill" | "awaiting_decision";
 export type ScheduleTimezoneStatus = "aligned" | "local_hour_drift" | "dst_offset_drift";
+export type ApprovalSlaStatus = "on_track" | "due_soon" | "breached";
 
 export interface ScheduledTriggerHealth {
   id: string; workflowId: string; scheduleLabel: string; cronExpression: string;
@@ -75,6 +76,8 @@ export interface WorkflowRun {
 export interface ApprovalRequest {
   id: string; runId: string; workflowName: string; stepLabel: string;
   action: string; detail: string; requestedAt: string;
+  approverName: string; dueAt: string; escalationOwner: string;
+  slaStatus: ApprovalSlaStatus; operatorAction: string;
 }
 
 export interface AuditLogEntry {
