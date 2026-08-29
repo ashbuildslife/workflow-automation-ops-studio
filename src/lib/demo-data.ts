@@ -1,4 +1,4 @@
-import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, DlqRedriveControl, ExecutionConcurrencySummary, OpsSnapshot, ScheduledTriggerHealth, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
+import type { ApprovalRequest, AuditLogEntry, Connector, ConnectorCircuitBreaker, CostSummary, DlqRedriveControl, ExecutionConcurrencySummary, ExecutionHeartbeat, OpsSnapshot, ScheduledTriggerHealth, StepRunResult, WebhookRecoveryEvent, WorkflowDefinition, WorkflowRun, WorkspaceMember } from "./types";
 
 export const demoMembers: WorkspaceMember[] = [
   { id: "m_1", name: "Jordan Park", role: "admin", initials: "JP" },
@@ -154,6 +154,15 @@ export const demoRunHistory: WorkflowRun[] = [
       { stepId: "s4", stepLabel: "Slack: Alert Team", status: "skipped", input: "Skipped — CRM step timed out", output: "", duration: 0, retries: 0 }
     ],
     costEstimate: 0.08, costActual: 0.12
+  },
+  {
+    id: "run_044", workflowId: "wf_support_triage", workflowName: "Support Ticket Triage",
+    status: "running", startedAt: "2030-06-08T19:28:00Z", duration: 130,
+    stepResults: [
+      { stepId: "s1", stepLabel: "Trigger: New Ticket", status: "success", input: "Webhook: ticket #T-5831 created", output: "Ticket: \"Export job stalled\" - customer: NorthStar Logistics", duration: 0.2, retries: 0 },
+      { stepId: "s2", stepLabel: "AI: Classify & Route", status: "success", input: "Ticket: export job stalled, NorthStar Logistics", output: "Urgency: high. Sentiment: frustrated. Category: API/infrastructure. Route to: engineering-oncall.", duration: 1.0, retries: 0 }
+    ],
+    costEstimate: 0.08, costActual: 0.05
   }
 ];
 
@@ -367,6 +376,35 @@ export const demoScheduleHealth: ScheduledTriggerHealth[] = [
   }
 ];
 
+export const demoExecutionHeartbeats: ExecutionHeartbeat[] = [
+  {
+    id: "hb_run_044",
+    runId: "run_044",
+    workflowId: "wf_support_triage",
+    workflowName: "Support Ticket Triage",
+    runStatus: "running",
+    lastHeartbeatAt: "2030-06-08T19:28:00Z",
+    observedAt: "2030-06-08T19:29:40Z",
+    expectedIntervalSeconds: 30,
+    staleAfterSeconds: 90,
+    status: "stale",
+    operatorAction: "No heartbeat for 100 seconds, beyond the three-heartbeat grace window; quarantine downstream work, mark the run crashed, and inspect the worker lease before retrying."
+  },
+  {
+    id: "hb_run_042",
+    runId: "run_042",
+    workflowId: "wf_lead_enrich",
+    workflowName: "Lead Enrichment Pipeline",
+    runStatus: "completed",
+    lastHeartbeatAt: "2030-06-08T19:30:03Z",
+    observedAt: "2030-06-08T19:30:04Z",
+    expectedIntervalSeconds: 30,
+    staleAfterSeconds: 90,
+    status: "not_required",
+    operatorAction: "Terminal state recorded; stop heartbeat monitoring so a completed run cannot be falsely flagged as a zombie."
+  }
+];
+
 export const demoCostSummary: CostSummary = {
   totalRuns: 42, totalCost: 3.47, budgetLimit: 20.00,
   usageQuota: {
@@ -396,5 +434,6 @@ export const demoSnapshot: OpsSnapshot = {
   circuitBreakers: demoCircuitBreakers,
   redriveControls: demoRedriveControls,
   scheduleHealth: demoScheduleHealth,
+  executionHeartbeats: demoExecutionHeartbeats,
   costSummary: demoCostSummary
 };

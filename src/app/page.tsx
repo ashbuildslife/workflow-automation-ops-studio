@@ -1,5 +1,5 @@
 import {
-  demoActiveRun, demoApprovals, demoAuditLog, demoCircuitBreakers, demoConcurrencySummary, demoConnectors, demoCostSummary,
+  demoActiveRun, demoApprovals, demoAuditLog, demoCircuitBreakers, demoConcurrencySummary, demoConnectors, demoCostSummary, demoExecutionHeartbeats,
   demoMembers, demoRedriveControls, demoScheduleHealth, demoWebhookRecovery, demoWorkflows
 } from "@/lib/demo-data";
 import type { ConnectorStatus, CredentialStatus, RunStatus } from "@/lib/types";
@@ -65,6 +65,7 @@ export default function Home() {
   const openCircuitBreakers = demoCircuitBreakers.filter(circuit => circuit.state === "open");
   const usageQuota = demoCostSummary.usageQuota;
   const scheduleAttentionCount = demoScheduleHealth.filter(s => s.status !== "on_time").length;
+  const heartbeatAttentionCount = demoExecutionHeartbeats.filter(h => h.status === "stale").length;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-5 py-8 md:px-8 lg:px-10 bg-slate-50">
@@ -118,6 +119,39 @@ export default function Home() {
             </p>
             <p className="mt-2 text-xs leading-5 text-amber-800">{demoConcurrencySummary.operatorAction}</p>
           </div>
+          {heartbeatAttentionCount > 0 && (
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50/70 p-4" role="alert" aria-label="Execution heartbeat health">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-slate-950">Execution heartbeat</h3>
+                <Badge tone="red">{heartbeatAttentionCount} stale</Badge>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-red-800">
+                Heartbeats catch workers that disappear while a run still looks active. Keep stale runs held until the worker lease is resolved, and stop monitoring terminal runs so completion events do not become false zombie alerts.
+              </p>
+              <div className="mt-3 space-y-2">
+                {demoExecutionHeartbeats.map(heartbeat => {
+                  const silenceSeconds = heartbeat.lastHeartbeatAt
+                    ? (Date.parse(heartbeat.observedAt) - Date.parse(heartbeat.lastHeartbeatAt)) / 1000
+                    : null;
+                  return (
+                    <div key={heartbeat.id} className={`rounded-xl border p-3 text-xs ${heartbeat.status === "stale" ? "border-red-200 bg-white" : "border-emerald-100 bg-white"}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-slate-900">{heartbeat.workflowName} · {heartbeat.runId}</p>
+                        <Badge tone={heartbeat.status === "stale" ? "red" : "green"}>{heartbeat.status.replace(/_/g, " ")}</Badge>
+                      </div>
+                      <p className="mt-1 text-slate-500">
+                        Run state {heartbeat.runStatus} · last heartbeat {heartbeat.lastHeartbeatAt ? formatIsoMinute(heartbeat.lastHeartbeatAt) : "none"} · observed {formatIsoMinute(heartbeat.observedAt)}
+                      </p>
+                      <p className="mt-1 text-slate-500">
+                        {silenceSeconds === null ? "No heartbeat expected" : `${silenceSeconds}s silent · ${heartbeat.expectedIntervalSeconds}s interval · ${heartbeat.staleAfterSeconds}s stale threshold`}
+                      </p>
+                      <p className={`mt-1 leading-5 ${heartbeat.status === "stale" ? "text-red-700" : "text-emerald-700"}`}>{heartbeat.operatorAction}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {openCircuitBreakers.length > 0 && (
             <div className="mt-4 rounded-2xl border border-red-200 bg-red-50/70 p-4" role="alert" aria-label="Open downstream circuit breakers">
               <div className="flex items-center justify-between gap-2">

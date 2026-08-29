@@ -17,6 +17,7 @@ export type ScheduleTriggerStatus = "on_time" | "behind" | "overdue";
 export type MissedRunPolicy = "skip_missed" | "bounded_backfill" | "awaiting_decision";
 export type ScheduleTimezoneStatus = "aligned" | "local_hour_drift" | "dst_offset_drift";
 export type ApprovalSlaStatus = "on_track" | "due_soon" | "breached";
+export type ExecutionHeartbeatStatus = "fresh" | "stale" | "not_required";
 
 export interface ScheduledTriggerHealth {
   id: string; workflowId: string; scheduleLabel: string; cronExpression: string;
@@ -71,6 +72,13 @@ export interface WorkflowRun {
   id: string; workflowId: string; workflowName: string;
   status: RunStatus; startedAt: string; duration: number;
   stepResults: StepRunResult[]; costEstimate: number; costActual: number;
+}
+
+export interface ExecutionHeartbeat {
+  id: string; runId: string; workflowId: string; workflowName: string; runStatus: RunStatus;
+  lastHeartbeatAt: string | null; observedAt: string;
+  expectedIntervalSeconds: number; staleAfterSeconds: number;
+  status: ExecutionHeartbeatStatus; operatorAction: string;
 }
 
 export interface ApprovalRequest {
@@ -156,5 +164,6 @@ export interface OpsSnapshot {
   circuitBreakers: ConnectorCircuitBreaker[];
   redriveControls: DlqRedriveControl[];
   scheduleHealth: ScheduledTriggerHealth[];
+  executionHeartbeats: ExecutionHeartbeat[];
   costSummary: CostSummary;
 }

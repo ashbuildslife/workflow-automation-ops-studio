@@ -766,3 +766,40 @@ describe("schedule timezone and DST safety", () => {
     expect(pageSource).toContain("cron engine timezone");
   });
 });
+
+describe("execution heartbeat safety", () => {
+  const heartbeats = demoSnapshot.executionHeartbeats ?? [];
+
+  it("holds running executions after the three-heartbeat grace window", () => {
+    const stale = heartbeats.filter(heartbeat => heartbeat.status === "stale");
+
+    expect(stale.length).toBeGreaterThan(0);
+    for (const heartbeat of stale) {
+      const run = demoRunHistory.find(item => item.id === heartbeat.runId);
+      const lastHeartbeatAt = Date.parse(heartbeat.lastHeartbeatAt!);
+      const observedAt = Date.parse(heartbeat.observedAt);
+      const silenceSeconds = (observedAt - lastHeartbeatAt) / 1000;
+
+      expect(run?.status).toBe("running");
+      expect(silenceSeconds).toBeGreaterThan(heartbeat.staleAfterSeconds);
+      expect(heartbeat.staleAfterSeconds).toBeGreaterThanOrEqual(heartbeat.expectedIntervalSeconds * 3);
+      expect(heartbeat.operatorAction).toMatch(/heartbeat|zombie|crash|worker|quarantine/i);
+    }
+  });
+
+  it("stops heartbeat monitoring at terminal run states", () => {
+    const terminal = heartbeats.filter(heartbeat => heartbeat.runStatus === "completed" || heartbeat.runStatus === "failed");
+
+    expect(terminal.length).toBeGreaterThan(0);
+    expect(terminal.every(heartbeat => heartbeat.status === "not_required")).toBe(true);
+  });
+
+  it("surfaces heartbeat freshness and recovery action on the dashboard", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Execution heartbeat");
+    expect(pageSource).toContain("heartbeat.lastHeartbeatAt");
+    expect(pageSource).toContain("heartbeat.staleAfterSeconds");
+    expect(pageSource).toContain("heartbeat.operatorAction");
+  });
+});
