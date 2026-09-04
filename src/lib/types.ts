@@ -3,6 +3,7 @@ export type ConnectorStatus = "healthy" | "degraded" | "down";
 export type CredentialStatus = "valid" | "reauth_due" | "expired";
 export type CredentialGateStatus = "clear" | "reauth_required" | "expired_blocked";
 export type WebhookSignatureStatus = "verified" | "invalid" | "stale_timestamp";
+export type WebhookClaimPath = "first_run" | "retry_after_failure" | "duplicate_done" | "in_progress_elsewhere";
 export type ErrorCategory = "transient" | "permanent" | "unknown";
 export type RecoveryStatus = "ready_for_replay" | "replayed" | "quarantined";
 export type ConcurrencyStatus = "normal" | "at_capacity" | "backlogged";
@@ -94,7 +95,7 @@ export interface AuditLogEntry {
 
 export interface WebhookRecoveryEvent {
   id: string; workflowId: string; provider: string; connectorId: string; receivedAt: string;
-  traceId: string; idempotencyKey: string; failureReason: string;
+  traceId: string; idempotencyKey: string; claimPath: WebhookClaimPath; failureReason: string;
   retryCount: number; maxRetries: number; status: RecoveryStatus;
   deadLetteredAt: string; replaySafe: boolean; operatorAction: string;
   duplicateAttemptCount: number; dedupeWindowExpiresAt: string;

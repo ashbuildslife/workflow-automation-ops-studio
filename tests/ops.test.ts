@@ -544,13 +544,12 @@ describe("webhook deduplication by idempotency key", () => {
       .filter(([, count]) => count > 1)
       .map(([key]) => key);
 
-    if (withDuplicates.length > 0) {
-      for (const duplicateKey of withDuplicates) {
-        const duplicateEvents = allRecoveryEvents.filter(e => e.idempotencyKey === duplicateKey);
-        for (const event of duplicateEvents) {
-          expect(event.duplicateAttemptCount).toBeGreaterThanOrEqual(1);
-          expect(Number.isNaN(Date.parse(event.dedupeWindowExpiresAt))).toBe(false);
-        }
+    expect(withDuplicates.length).toBeGreaterThan(0);
+    for (const duplicateKey of withDuplicates) {
+      const duplicateEvents = allRecoveryEvents.filter(e => e.idempotencyKey === duplicateKey);
+      for (const event of duplicateEvents) {
+        expect(event.duplicateAttemptCount).toBeGreaterThanOrEqual(1);
+        expect(Number.isNaN(Date.parse(event.dedupeWindowExpiresAt))).toBe(false);
       }
     }
   });
@@ -579,6 +578,38 @@ describe("webhook deduplication by idempotency key", () => {
       expect(event.dedupeWindowExpiresAt).toBeDefined();
       expect(event.operatorAction).toMatch(/dedupe|duplicate|retry|idempotent/i);
     }
+  });
+});
+
+describe("webhook claim path audit", () => {
+  it("records a shared retry and deduplication decision for every recovery event", () => {
+    const claimPaths = new Set(demoWebhookRecovery.map(event => event.claimPath));
+
+    expect(claimPaths.has("retry_after_failure")).toBe(true);
+    expect(claimPaths.has("duplicate_done")).toBe(true);
+    for (const event of demoWebhookRecovery) {
+      expect(["first_run", "retry_after_failure", "duplicate_done", "in_progress_elsewhere"]).toContain(event.claimPath);
+    }
+  });
+
+  it("keeps duplicate_done deliveries out of a second side effect", () => {
+    const deduplicated = demoWebhookRecovery.filter(event => event.claimPath === "duplicate_done");
+
+    expect(deduplicated.length).toBeGreaterThan(0);
+    for (const event of deduplicated) {
+      expect(event.duplicateAttemptCount).toBeGreaterThan(0);
+      expect(event.status).toBe("quarantined");
+      expect(event.replaySafe).toBe(false);
+      expect(event.operatorAction).toMatch(/duplicate|dedupe|idempotency|no-op/i);
+    }
+  });
+
+  it("surfaces the claim path and stable key in the recovery queue", () => {
+    const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("Claim path:");
+    expect(pageSource).toContain("event.claimPath");
+    expect(pageSource).toContain("event.idempotencyKey");
   });
 });
 

@@ -277,6 +277,9 @@ export default function Home() {
                   <p className="mt-1 text-slate-400">
                     {event.retryCount}/{event.maxRetries} retries · {event.status.replace(/_/g, " ")} · {event.replaySafe ? "safe replay" : "hold for review"}
                   </p>
+                  <p className="mt-1 font-mono text-[10px] text-slate-400">
+                    Claim path: {event.claimPath.replace(/_/g, " ")} · key {event.idempotencyKey}
+                  </p>
                   <p className="mt-1 text-slate-400">
                     {event.duplicateAttemptCount} duplicate attempt{event.duplicateAttemptCount === 1 ? "" : "s"} blocked · dedupe TTL {new Date(event.dedupeWindowExpiresAt).toLocaleTimeString()}
                   </p>

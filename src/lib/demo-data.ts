@@ -193,6 +193,7 @@ export const demoWebhookRecovery: WebhookRecoveryEvent[] = [
     id: "dlq_001", workflowId: "wf_support_triage", provider: "Zendesk", connectorId: "conn_crm",
     receivedAt: "2030-06-08T19:20:05Z", traceId: "trc_ticket_5829",
     idempotencyKey: "idem_zendesk_T-5829_crm_upsert_v1",
+    claimPath: "retry_after_failure",
     failureReason: "HubSpot CRM returned 503 after provider-aware exponential backoff while its OAuth grant was due for reauthorization.",
     retryCount: 3, maxRetries: 3, status: "quarantined",
     deadLetteredAt: "2030-06-08T19:21:12Z", replaySafe: false,
@@ -208,6 +209,7 @@ export const demoWebhookRecovery: WebhookRecoveryEvent[] = [
     id: "dlq_002", workflowId: "wf_lead_enrich", provider: "HubSpot", connectorId: "conn_crm",
     receivedAt: "2030-06-08T19:30:03Z", traceId: "trc_contact_48291",
     idempotencyKey: "idem_hubspot_48291_enrichment_v1",
+    claimPath: "retry_after_failure",
     failureReason: "Provider retried after a slow acknowledgement, but the original contact update already succeeded.",
     retryCount: 3, maxRetries: 3, status: "quarantined",
     deadLetteredAt: "2030-06-08T19:30:48Z", replaySafe: false,
@@ -223,6 +225,7 @@ export const demoWebhookRecovery: WebhookRecoveryEvent[] = [
     id: "dlq_003", workflowId: "wf_lead_enrich", provider: "Slack", connectorId: "conn_slack",
     receivedAt: "2030-06-08T19:30:04Z", traceId: "trc_slack_lead_48291",
     idempotencyKey: "idem_slack_lead_48291_notification_v1",
+    claimPath: "retry_after_failure",
     failureReason: "Slack returned a transient 429 during provider retry; auth was checked and remains valid.",
     retryCount: 3, maxRetries: 3, status: "ready_for_replay",
     deadLetteredAt: "2030-06-08T19:32:10Z", replaySafe: true,
@@ -236,6 +239,22 @@ export const demoWebhookRecovery: WebhookRecoveryEvent[] = [
     rateLimitRecovery: {
       retryAfterSeconds: 60, retryNotBefore: "2030-06-08T19:33:10Z",
       evidence: "Slack HTTP 429 returned Retry-After: 60; replay stayed paused until the provider window elapsed."
+    }
+  },
+  {
+    id: "dlq_004", workflowId: "wf_lead_enrich", provider: "HubSpot", connectorId: "conn_crm",
+    receivedAt: "2030-06-08T19:30:47Z", traceId: "trc_contact_48291_retry",
+    idempotencyKey: "idem_hubspot_48291_enrichment_v1",
+    claimPath: "duplicate_done",
+    failureReason: "A provider retry arrived after the original CRM upsert completed; the atomic claim suppressed a second write.",
+    retryCount: 0, maxRetries: 3, status: "quarantined",
+    deadLetteredAt: "2030-06-08T19:30:49Z", replaySafe: false,
+    operatorAction: "Duplicate delivery resolved as a deduplicated no-op; preserve the idempotency claim and review the credential gate before any manual replay.",
+    duplicateAttemptCount: 1, dedupeWindowExpiresAt: "2030-06-08T20:30:49Z",
+    errorCategory: "unknown", credentialGate: "reauth_required",
+    signatureVerification: {
+      status: "verified", signedAt: "2030-06-08T19:30:45Z", checkedAt: "2030-06-08T19:30:46Z",
+      toleranceSeconds: 300, evidence: "The provider signature matched and the stable event key resolved to the completed claim before another CRM write."
     }
   }
 ];
