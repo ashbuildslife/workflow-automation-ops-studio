@@ -55,12 +55,27 @@ describe("execution concurrency safety", () => {
     expect(concurrency.operatorAction).toMatch(/scale|capacity|queue|worker/i);
   });
 
+  it("keeps queue-age telemetry coherent with its observation snapshot", () => {
+    const observedAt = Date.parse(concurrency.observedAt);
+    const oldestQueuedAt = Date.parse(concurrency.oldestQueuedAt!);
+
+    expect(Number.isNaN(observedAt)).toBe(false);
+    expect(Number.isNaN(oldestQueuedAt)).toBe(false);
+    expect(concurrency.oldestQueueAgeSeconds).toBe((observedAt - oldestQueuedAt) / 1000);
+    expect(concurrency.oldestQueueAgeSeconds!).toBeGreaterThan(0);
+    expect(concurrency.queueAgeSloSeconds).toBeGreaterThan(0);
+    expect(concurrency.oldestQueueAgeSeconds!).toBeLessThan(concurrency.queueAgeSloSeconds);
+  });
+
   it("surfaces production queue pressure for operators", () => {
     const pageSource = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
 
     expect(pageSource).toContain("Execution pressure");
     expect(pageSource).toContain("demoConcurrencySummary.activeExecutions");
     expect(pageSource).toContain("demoConcurrencySummary.queuedExecutions");
+    expect(pageSource).toContain("demoConcurrencySummary.oldestQueueAgeSeconds");
+    expect(pageSource).toContain("demoConcurrencySummary.queueAgeSloSeconds");
+    expect(pageSource).toContain("demoConcurrencySummary.observedAt");
     expect(pageSource).toContain("demoConcurrencySummary.operatorAction");
   });
 });

@@ -111,7 +111,8 @@ export interface WebhookRecoveryEvent {
 
 export interface ExecutionConcurrencySummary {
   limit: number; activeExecutions: number; queuedExecutions: number;
-  oldestQueuedAt: string | null; queueDiscipline: "fifo";
+  observedAt: string; oldestQueuedAt: string | null; oldestQueueAgeSeconds: number | null;
+  queueAgeSloSeconds: number; queueDiscipline: "fifo";
   scope: ConcurrencyScope; status: ConcurrencyStatus; operatorAction: string;
 }
 

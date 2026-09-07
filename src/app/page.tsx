@@ -36,6 +36,12 @@ function formatIsoMinute(value: string) {
   return `${date} ${time.slice(0, 5)} UTC`;
 }
 
+function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainderSeconds = seconds % 60;
+  return `${minutes}m ${remainderSeconds}s`;
+}
+
 function RunStatusBadge({ status }: { status: RunStatus }) {
   const m: Record<RunStatus, { label: string; tone: string }> = {
     queued: { label: "Queued", tone: "slate" }, running: { label: "Running", tone: "purple" },
@@ -115,8 +121,11 @@ export default function Home() {
               {demoConcurrencySummary.activeExecutions} / {demoConcurrencySummary.limit} active · {demoConcurrencySummary.queuedExecutions} queued · FIFO
             </p>
             <p className="mt-1 text-xs text-slate-600">
-              {demoConcurrencySummary.oldestQueuedAt ? `Oldest queued ${formatIsoMinute(demoConcurrencySummary.oldestQueuedAt)}` : "Queue clear"}
+              {demoConcurrencySummary.oldestQueuedAt && demoConcurrencySummary.oldestQueueAgeSeconds !== null
+                ? `Oldest queued ${formatIsoMinute(demoConcurrencySummary.oldestQueuedAt)} · age ${formatDuration(demoConcurrencySummary.oldestQueueAgeSeconds)} / ${formatDuration(demoConcurrencySummary.queueAgeSloSeconds)} SLO`
+                : "Queue clear"}
             </p>
+            <p className="mt-1 text-[10px] text-slate-400">Observed {formatIsoMinute(demoConcurrencySummary.observedAt)}</p>
             <p className="mt-2 text-xs leading-5 text-amber-800">{demoConcurrencySummary.operatorAction}</p>
           </div>
           {heartbeatAttentionCount > 0 && (
