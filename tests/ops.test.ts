@@ -134,6 +134,20 @@ describe("bounded DLQ redrive safety", () => {
     }
   });
 
+  it("ties each redrive control to a replay-safe, rate-limited recovery event", () => {
+    const connectorIds = new Set(demoConnectors.map(connector => connector.id));
+
+    for (const control of controls) {
+      const rateLimitedEvents = demoWebhookRecovery.filter(event => event.connectorId === control.connectorId && event.replaySafe && event.rateLimitRecovery);
+
+      expect(connectorIds.has(control.connectorId)).toBe(true);
+      expect(rateLimitedEvents.length).toBeGreaterThan(0);
+      expect(control.maxMessagesPerMinute).toBeGreaterThan(0);
+      expect(control.maxMessagesPerMinute).toBeLessThanOrEqual(control.eligibleMessageCount);
+      expect(Number.isNaN(Date.parse(control.nextBatchNotBefore))).toBe(false);
+    }
+  });
+
   it("waits for provider recovery windows before admitting the canary", () => {
     for (const control of controls) {
       const affectedEvents = demoWebhookRecovery.filter(event => event.connectorId === control.connectorId && event.rateLimitRecovery);
