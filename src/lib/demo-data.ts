@@ -282,7 +282,7 @@ export const demoCircuitBreakers: ConnectorCircuitBreaker[] = [
     recentFailures: 4,
     openedAt: "2030-06-08T19:21:12Z",
     probeAfter: "2030-06-08T19:26:12Z",
-    blockedExecutionCount: 6,
+    blockedExecutionCount: 6, probeExecutionLimit: 1, admittedProbeCount: 0,
     operatorAction: "Keep HubSpot calls failed fast until the five-minute recovery window ends, then allow one health probe before resuming queued work."
   }
 ];

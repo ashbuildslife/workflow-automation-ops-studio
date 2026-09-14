@@ -95,6 +95,8 @@ describe("downstream circuit breaker safety", () => {
       expect(Number.isNaN(probeAfter)).toBe(false);
       expect(probeAfter).toBeGreaterThan(openedAt);
       expect(circuit.blockedExecutionCount).toBeGreaterThan(0);
+      expect(circuit.probeExecutionLimit).toBe(1);
+      expect(circuit.admittedProbeCount).toBeLessThanOrEqual(circuit.probeExecutionLimit);
       expect(circuit.operatorAction).toMatch(/failed fast|probe|recovery|resume/i);
       expect(demoConnectors.some(connector => connector.id === circuit.connectorId)).toBe(true);
     }
@@ -115,6 +117,8 @@ describe("downstream circuit breaker safety", () => {
     expect(pageSource).toContain("Retry storm protection");
     expect(pageSource).toContain("circuit.blockedExecutionCount");
     expect(pageSource).toContain("circuit.probeAfter");
+    expect(pageSource).toContain("circuit.admittedProbeCount");
+    expect(pageSource).toContain("circuit.probeExecutionLimit");
   });
 });
 

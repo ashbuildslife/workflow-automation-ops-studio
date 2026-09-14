@@ -119,7 +119,7 @@ export interface ExecutionConcurrencySummary {
 export interface ConnectorCircuitBreaker {
   id: string; connectorId: string; state: CircuitBreakerState;
   failureThreshold: number; recentFailures: number; openedAt: string | null;
-  probeAfter: string | null; blockedExecutionCount: number; operatorAction: string;
+  probeAfter: string | null; blockedExecutionCount: number; probeExecutionLimit: number; admittedProbeCount: number; operatorAction: string;
 }
 
 export interface DlqRedriveControl {

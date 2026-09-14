@@ -176,7 +176,7 @@ export default function Home() {
                         {connector?.name ?? circuit.connectorId}: {circuit.recentFailures} recent failures / threshold {circuit.failureThreshold}
                       </p>
                       <p className="mt-1 text-red-600">
-                        {circuit.blockedExecutionCount} executions failed fast · {circuit.probeAfter ? `probe after ${formatIsoMinute(circuit.probeAfter)}` : "manual reset required"}
+                        {circuit.blockedExecutionCount} executions failed fast · {circuit.probeAfter ? `probe after ${formatIsoMinute(circuit.probeAfter)}` : "manual reset required"} · probe budget {circuit.admittedProbeCount}/{circuit.probeExecutionLimit}
                       </p>
                       <p className="mt-1 leading-5">{circuit.operatorAction}</p>
                     </div>
